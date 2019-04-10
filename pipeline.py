@@ -47,8 +47,6 @@ label_ds = tf.data.Dataset.from_tensor_slices(
 for label in label_ds.take(10):
   print(label_names[label.numpy()])
 
-image_label_ds = tf.data.Dataset.zip((image_ds, label_ds))
-
 ds = tf.data.Dataset.from_tensor_slices((all_image_paths, all_image_labels))
 
 
@@ -65,8 +63,6 @@ ds = ds.repeat()
 ds = ds.batch(BATCH_SIZE)
 
 ds.prefetch(buffer_size=AUTOTUNE)
-
-ds
 
 mobile_net = tf.keras.applications.MobileNetV2(
     input_shape=(192, 192, 3), weights='imagenet', include_top=False)
@@ -110,7 +106,7 @@ import time
 
 tensorboard = TensorBoard(log_dir="logs/{}".format(time.time()))
 
-model.fit(ds, epochs=32, steps_per_epoch=int(steps_per_epoch), callbacks=[tensorboard])
+
 
 
 

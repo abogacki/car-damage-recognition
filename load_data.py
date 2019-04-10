@@ -4,6 +4,8 @@ import tensorflow as tf
 import pathlib
 import random
 
+tf.enable_eager_execution()
+
 def preprocess_image(image):
     image = tf.image.decode_jpeg(image, channels=3)
     image = tf.image.resize_images(image, [192, 192])
