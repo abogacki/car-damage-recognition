@@ -19,8 +19,8 @@ checkpoint_dir = os.path.dirname(checkpoint_path)
 cp_callback = create_checkpoint_callback(checkpoint_dir)
 
 model = keras.Sequential([
-    keras.layers.Dense(300, input_shape=(192,192,3), activation='relu'),
-    keras.layers.Dense(150, activation='relu'),
+    # keras.layers.Dense(300, input_shape=(192,192,3), activation='relu'),
+    # keras.layers.Dense(150, activation='relu'),
     # keras.layers.GlobalAveragePooling2D(),
     # keras.layers.Dense(len(label_names), activation='relu'),
     keras.layers.Activation('softmax')
