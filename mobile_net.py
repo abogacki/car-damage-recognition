@@ -1,53 +1,69 @@
-import tensorflow as tf
-from tensorflow.keras.callbacks import TensorBoard
-from load_data import load_dataset
-from checkpoint import create_checkpoint_callback
-import time
+# Only 2 lines will be added
+# Rest of the flow and code remains the same as default keras
+import plaidml.keras
+plaidml.keras.install_backend()
 
-tf.enable_eager_execution()
+import numpy as np
+import time
+from checkpoint import create_checkpoint_callback
+from load_data import load_dataset
+import keras
+import os
+
+os.environ["KERAS_BACKEND"] = "plaidml.keras.backend"
 
 
 DATA_PATH = '/Users/aboga/repos/car-damage-dataset/data2a/training'
 ds, image_count, label_names, steps_per_epoch = load_dataset(DATA_PATH, 32)
 
-AUTOTUNE = tf.data.experimental.AUTOTUNE
-ds.prefetch(buffer_size=AUTOTUNE)
-
-
-mobile_net = tf.keras.applications.MobileNetV2(
+print(ds)
+print(label_names)
+print(image_count)
+# quit()
+mobile_net = keras.applications.MobileNetV2(
     input_shape=(192, 192, 3), weights='imagenet', include_top=False)
 mobile_net.trainable = False
 
-import os
 checkpoint_path = "training_1/cp.ckpt"
 checkpoint_dir = os.path.dirname(checkpoint_path)
 cp_callback = create_checkpoint_callback(checkpoint_dir)
 
-model = tf.keras.Sequential([
-    tf.keras.layers.Dense(300, input_shape=(192,192,3), activation='relu'),
-    tf.keras.layers.Dense(150, activation='relu'),
-    # tf.keras.layers.GlobalAveragePooling2D(),
-    # tf.keras.layers.Dense(len(label_names), activation='relu'),
-    tf.keras.layers.Activation('softmax')
+model = keras.Sequential([
+    keras.layers.Conv2D(32, (3, 3), input_shape=(image_count, 192, 192, 3)),
+    keras.layers.Activation('relu'),
+    keras.layers.MaxPooling2D(pool_size=(2, 2)),
+    keras.layers.Conv2D(32, (3, 3)),
+    keras.layers.Activation('relu'),
+    keras.layers.MaxPooling2D(pool_size=(2, 2)),
+    keras.layers.Conv2D(32, (3, 3)),
+    keras.layers.Activation('relu'),
+    keras.layers.MaxPooling2D(pool_size=(2, 2)),
+    keras.layers.Flatten(),
+    keras.layers.Dense(32),
+    keras.layers.Activation('relu'),
+    keras.layers.Dropout(0.5),
+    keras.layers.Dense(len(label_names)),
 ])
 
-model.compile(optimizer=tf.train.AdamOptimizer(),
-              loss=tf.keras.losses.sparse_categorical_crossentropy,
+model.compile(optimizer='rmsprop',
+              loss=keras.losses.sparse_categorical_crossentropy,
               metrics=["accuracy"])
 
 model.summary()
 
 # log results
-tensorboard = TensorBoard(log_dir="logs/{}".format(time.time()))
 
 TEST_DATA_PATH = '/Users/aboga/repos/car-damage-dataset/data2a/validation'
-test_ds, test_image_count, test_label_names, test_steps_per_epoch = load_dataset(TEST_DATA_PATH, 32)
-test_ds.prefetch(AUTOTUNE)
+test_ds, test_image_count, test_label_names, test_steps_per_epoch = load_dataset(
+    TEST_DATA_PATH, 32)
 
-model.fit(ds, epochs=1, steps_per_epoch=int(steps_per_epoch), callbacks=[cp_callback, tensorboard])
-
-test_tensorboard = TensorBoard(log_dir="test_logs/{}".format(time.time()))
-model.evaluate(test_ds, batch_size=32, steps=30)
+def change_range(image, label):
+  return 2*image-1, label
 
 
+keras_ds = ds.map(change_range)
 
+model.fit(keras_ds, epochs=1, steps_per_epoch=int(
+    steps_per_epoch), callbacks=[cp_callback], validation_data=np.array(test_ds))
+
+# model.evaluate(np.array(test_ds), batch_size=32, steps=30)
