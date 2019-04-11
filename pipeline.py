@@ -66,7 +66,7 @@ ds.prefetch(buffer_size=AUTOTUNE)
 
 mobile_net = tf.keras.applications.MobileNetV2(
     input_shape=(192, 192, 3), weights='imagenet', include_top=False)
-mobile_net.trainable = True
+mobile_net.trainable = False
 
 res_net = tf.keras.applications.ResNet50(
     input_shape=(192, 192, 3), weights=None, include_top=False, pooling='avg')
@@ -98,7 +98,9 @@ model.compile(optimizer=tf.train.AdamOptimizer(),
 
 model.summary()
 
-steps_per_epoch = tf.ceil(len(all_image_paths)/BATCH_SIZE).numpy()
+
+steps_per_epoch = int(tf.ceil(len(all_image_paths)/BATCH_SIZE).numpy())
+
 
 from tensorflow.keras.callbacks import TensorBoard
 
@@ -106,6 +108,7 @@ import time
 
 tensorboard = TensorBoard(log_dir="logs/{}".format(time.time()))
 
+model.fit(keras_ds, batch_size=BATCH_SIZE, steps_per_epoch=steps_per_epoch, callbacks=[tensorboard])
 
 
 
