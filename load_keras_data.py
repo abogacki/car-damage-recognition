@@ -1,3 +1,11 @@
+# # Only 2 lines will be added
+# # Rest of the flow and code remains the same as default keras
+import plaidml.keras
+
+plaidml.keras.install_backend()
+
+# Rest =====================
+
 from PIL import Image
 import numpy as np
 import os
@@ -30,12 +38,10 @@ label_names = sorted(
 label_to_index = dict((name, index)
                       for index, name in enumerate(label_names))
 
-train_image_labels = [label_to_index[pathlib.Path(
-    path).parent.name] for path in train_image_paths]
+train_image_labels = [pathlib.Path(path).parent.name for path in train_image_paths]
+train_image_labels = np.array(train_image_labels)
 test_image_labels = [label_to_index[pathlib.Path(
     path).parent.name] for path in test_image_paths]
-
-
 
 
 def preprocess_image(image, size=(192, 192), conv_type=float):
@@ -84,12 +90,22 @@ model.compile(loss='categorical_crossentropy',
 
 model.summary()
 
-print("Length normalized images", len(train_normalized_images))
-print("Length normalized images", len(train_image_labels))
-print("Shape normalized images", train_normalized_images.shape)
-print("Shape normalized labels", train_image_labels)
 
-model.fit(train_normalized_images, train_image_labels, batch_size=30, epochs=2, verbose=1)
+# print("train_image_labels", train_image_labels)
+label_encoder = LabelEncoder()
+integer_encoded = label_encoder.fit_transform(train_image_labels)
+
+onehot_encoder = OneHotEncoder(sparse=False)
+integer_encoded = train_image_labels.reshape(len(train_image_labels), 1)
+onehot_encoded = onehot_encoder.fit_transform(integer_encoded)
+print(onehot_encoded)
+# quit()
+# print("Length normalized images", len(train_normalized_images))
+# print("Length normalized images", len(train_image_labels))
+# print("Shape normalized images", train_normalized_images.shape)
+# print("Shape normalized labels", train_image_labels)
+
+model.fit(train_normalized_images, onehot_encoded, batch_size=30, epochs=2, verbose=1)
 
 loss, acc = model.evaluate(test_normalized_images,
                            test_image_labels, verbose=1)
