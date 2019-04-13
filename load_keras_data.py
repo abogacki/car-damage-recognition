@@ -6,16 +6,16 @@ plaidml.keras.install_backend()
 
 # Rest =====================
 
-from PIL import Image
-import numpy as np
-import os
-import imageio
-import pathlib
-import random
-import keras
-
-from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import LabelEncoder
+import keras
+import random
+import pathlib
+import imageio
+import os
+import numpy as np
+from PIL import Image
+
 
 TRAIN_DATA_PATH = '/Users/aboga/repos/car-damage-dataset/data2a/training'
 TEST_DATA_PATH = '/Users/aboga/repos/car-damage-dataset/data2a/validation'
@@ -38,10 +38,13 @@ label_names = sorted(
 label_to_index = dict((name, index)
                       for index, name in enumerate(label_names))
 
-train_image_labels = [pathlib.Path(path).parent.name for path in train_image_paths]
+train_image_labels = [pathlib.Path(
+    path).parent.name for path in train_image_paths]
 train_image_labels = np.array(train_image_labels)
+
 test_image_labels = [label_to_index[pathlib.Path(
     path).parent.name] for path in test_image_paths]
+test_image_labels = np.array(test_image_labels)
 
 
 def preprocess_image(image, size=(192, 192), conv_type=float):
@@ -52,18 +55,11 @@ def preprocess_image(image, size=(192, 192), conv_type=float):
     return image
 
 
-def attach_label_to_image(image, label_index):
-    print(label_index)
-
-
 train_normalized_images = np.array(
     [preprocess_image(image) for image in train_image_paths])
 test_normalized_images = np.array(
     [preprocess_image(image) for image in test_image_paths])
 
-print(train_normalized_images.shape)
-
-# quit()
 
 model = keras.Sequential()
 model.add(keras.layers.Convolution2D(32, (3, 3), input_shape=(192, 192, 3)))
@@ -90,23 +86,28 @@ model.compile(loss='categorical_crossentropy',
 
 model.summary()
 
+train_label_encoder = LabelEncoder()
+train_integer_encoded = train_label_encoder.fit_transform(train_image_labels)
+train_onehot_encoder = OneHotEncoder(sparse=False)
+train_integer_encoded = train_image_labels.reshape(len(train_image_labels), 1)
+train_onehot_encoded = train_onehot_encoder.fit_transform(
+    train_integer_encoded)
 
-# print("train_image_labels", train_image_labels)
-label_encoder = LabelEncoder()
-integer_encoded = label_encoder.fit_transform(train_image_labels)
+test_label_encoder = LabelEncoder()
+test_integer_encoded = test_label_encoder.fit_transform(test_image_labels)
+test_onehot_encoder = OneHotEncoder(sparse=False)
+test_integer_encoded = test_image_labels.reshape(len(test_image_labels), 1)
+test_onehot_encoded = test_onehot_encoder.fit_transform(
+    test_integer_encoded)
 
-onehot_encoder = OneHotEncoder(sparse=False)
-integer_encoded = train_image_labels.reshape(len(train_image_labels), 1)
-onehot_encoded = onehot_encoder.fit_transform(integer_encoded)
-print(onehot_encoded)
-# quit()
-# print("Length normalized images", len(train_normalized_images))
-# print("Length normalized images", len(train_image_labels))
-# print("Shape normalized images", train_normalized_images.shape)
-# print("Shape normalized labels", train_image_labels)
+print(len(test_normalized_images))
+print(len(test_onehot_encoded))
 
-model.fit(train_normalized_images, onehot_encoded, batch_size=30, epochs=2, verbose=1)
+model.fit(train_normalized_images, train_onehot_encoded,
+          batch_size=30, epochs=10, verbose=1)
+
 
 loss, acc = model.evaluate(test_normalized_images,
-                           test_image_labels, verbose=1)
+                           test_onehot_encoded, verbose=1)
 
+print(loss, acc)

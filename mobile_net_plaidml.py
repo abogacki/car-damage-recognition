@@ -27,6 +27,7 @@ os.environ["KERAS_BACKEND"] = "plaidml.keras.backend"
 # cp_callback = create_checkpoint_callback(checkpoint_dir)
 
 model = keras.Sequential()
+
 model.add(keras.layers.Conv2D(32, (3, 3), input_shape=(192, 192, 3)))
 model.add(keras.layers.Activation('relu'))
 model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
@@ -40,8 +41,7 @@ model.add(keras.layers.Flatten())
 model.add(keras.layers.Dense(64))
 model.add(keras.layers.Activation('relu'))
 model.add(keras.layers.Dropout(0.5))
-model.add(keras.layers.Dense(1), )
-# model.add(keras.layers.Dense(3, activation='softmax'))
+model.add(keras.layers.Dense(1))
 
 
 model.compile(optimizer='sgd',
