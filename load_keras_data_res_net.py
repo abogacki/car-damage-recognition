@@ -79,22 +79,24 @@ model.compile(loss='categorical_crossentropy',
 
 model.summary()
 
-train_label_encoder = LabelEncoder()
-train_integer_encoded = train_label_encoder.fit_transform(train_image_labels)
-train_onehot_encoder = OneHotEncoder(sparse=False)
-train_integer_encoded = train_image_labels.reshape(len(train_image_labels), 1)
+# train_label_encoder = LabelEncoder()
+# train_integer_encoded = train_label_encoder.fit_transform(train_image_labels)
+train_onehot_encoder = OneHotEncoder(sparse=False, categories='auto')
+# train_integer_encoded = train_image_labels.reshape(len(train_image_labels), 1)
 train_onehot_encoded = train_onehot_encoder.fit_transform(
-    train_integer_encoded)
+    train_image_labels.reshape(-1,1))
 
-test_label_encoder = LabelEncoder()
-test_integer_encoded = test_label_encoder.fit_transform(test_image_labels)
-test_onehot_encoder = OneHotEncoder(sparse=False)
+# test_label_encoder = LabelEncoder()
+# test_integer_encoded = test_label_encoder.fit_transform(test_image_labels)
+test_onehot_encoder = OneHotEncoder(sparse=False, categories='auto')
 test_integer_encoded = test_image_labels.reshape(len(test_image_labels), 1)
 test_onehot_encoded = test_onehot_encoder.fit_transform(
-    test_integer_encoded)
+    test_image_labels.reshape(-1, 1))
 
 print(len(test_normalized_images))
 print(len(test_onehot_encoded))
+
+# quit()
 
 early_stopping_cb = keras.callbacks.EarlyStopping(monitor='val_loss')
 
