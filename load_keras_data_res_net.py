@@ -96,8 +96,10 @@ test_onehot_encoded = test_onehot_encoder.fit_transform(
 print(len(test_normalized_images))
 print(len(test_onehot_encoded))
 
+early_stopping_cb = keras.callbacks.EarlyStopping(monitor='val_loss')
+
 model.fit(train_normalized_images, train_onehot_encoded,
-          validation_data=(test_normalized_images, test_onehot_encoded), batch_size=30, epochs=10, verbose=1)
+          validation_data=(test_normalized_images, test_onehot_encoded), batch_size=30, epochs=10, verbose=1, callbacks=[early_stopping_cb])
 
 model.save_weights('./weights/res_net_weights.h5')
 
